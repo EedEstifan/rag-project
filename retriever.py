@@ -2,21 +2,19 @@ import os
 import pickle
 import numpy as np
 import faiss
-import time
-from google import genai
+from openai import OpenAI
 from dotenv import load_dotenv
 
 load_dotenv()
 
-client = genai.Client(api_key=os.getenv("API_KEY"))
+client = OpenAI(api_key=os.getenv("API_KEY"))
 
 def get_embedding(text):
-    time.sleep(1)
-    result = client.models.embed_content(
-        model="models/gemini-embedding-001",
-        contents=text
+    result = client.embeddings.create(
+        model="text-embedding-3-small",
+        input=text
     )
-    return result.embeddings[0].values
+    return result.data[0].embedding
 
 def retrieve(query, top_k=3):
     index = faiss.read_index("index.faiss")
@@ -34,10 +32,3 @@ def retrieve(query, top_k=3):
         })
 
     return results
-
-if __name__ == "__main__":
-    query = "What is the fine for a data breach?"
-    results = retrieve(query)
-    for i, r in enumerate(results):
-        print(f"\n--- Result {i+1} (score: {r['score']:.2f}) ---")
-        print(r["chunk"][:300])
